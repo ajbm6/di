@@ -9,6 +9,9 @@ namespace OrnoTest;
 
 use Orno\Di\Container;
 use Orno\Di\Definition\Factory;
+use OrnoTest\Assets\Baz;
+use OrnoTest\Assets\BazStatic;
+use OrnoTest\Assets\Foo;
 
 /**
  * ContainerTest
@@ -422,5 +425,119 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf('Orno\Di\Definition\DefinitionInterface', $extend);
         $this->assertSame($definition, $extend);
+    }
+
+    public function testCallExecutesAnonymousFunction()
+    {
+        $expected = 'foo';
+
+        $c = new Container();
+        $result = $c->call(function () use ($expected) {
+            return $expected;
+        });
+
+        $this->assertSame($result, $expected);
+    }
+
+    public function testCallExecutesNamedFunction()
+    {
+        $method = '\OrnoTest\Assets\sayHi';
+
+        $c = new Container();
+        $returned = $c->call($method);
+        $this->assertSame($returned, 'hi');
+    }
+
+    public function testCallExecutesCallableDefinedByArray()
+    {
+        $expected = 'qux';
+        $baz = new BazStatic();
+
+        $c = new Container();
+        $returned = $c->call([$baz, 'qux']);
+
+        $this->assertSame($returned, $expected);
+    }
+
+    public function testCallExecutesMethodsWithNamedParameters()
+    {
+        $expected = 'bar';
+
+        $c = new Container();
+        $returned = $c->call(function ($foo) {
+            return $foo;
+        }, ['foo' => $expected]);
+
+        $this->assertSame($returned, $expected);
+    }
+
+    public function testCallExecutesStaticMethod()
+    {
+        $method = '\OrnoTest\Assets\BazStatic::baz';
+        $expected = 'qux';
+
+        $c = new Container();
+        $returned = $c->call($method, ['foo' => $expected]);
+        $this->assertSame($returned, $expected);
+    }
+
+    public function testCallResolvesTypeHintedArgument()
+    {
+        $expected = 'OrnoTest\Assets\Baz';
+
+        $c = new Container();
+        $returned = $c->call(function (Baz $baz) use ($expected) {
+            return get_class($baz);
+        });
+
+        $this->assertSame($returned, $expected);
+    }
+
+    public function testCallMergesTypeHintedAndProvidedAttributes()
+    {
+        $expected = 'bar+OrnoTest\Assets\Baz';
+
+        $c = new Container();
+        $returned = $c->call(function ($foo, Baz $baz) use ($expected) {
+            return $foo.'+'.get_class($baz);
+        }, ['foo' => 'bar']);
+
+        $this->assertSame($returned, $expected);
+    }
+
+    public function testCallFillsInDefaultParameterValues()
+    {
+        $expected = 'bar';
+
+        $c = new Container();
+        $returned = $c->call(function ($foo = 'bar') {
+            return $foo;
+        });
+
+        $this->assertSame($returned, $expected);
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testCallThrowsRuntimeExceptionIfParameterResolutionFails()
+    {
+        $c = new Container();
+        $c->call(function (array $foo) {
+            return implode(',', $foo);
+        });
+
+        $this->assertFalse(true);
+    }
+
+    public function testCallDoesntThinksArrayTypeHintAreToBeResolvedByContainer()
+    {
+        $c = new Container();
+        $returned = $c->call(function (array $foo = []) {
+            return $foo;
+        });
+
+        $this->assertInternalType('array', $returned);
+        $this->assertEmpty($returned);
     }
 }
