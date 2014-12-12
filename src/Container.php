@@ -16,6 +16,7 @@ use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionParameter;
+use RuntimeException;
 
 class Container implements ContainerInterface, \ArrayAccess
 {
@@ -279,7 +280,7 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         if (! isset($config['di']) || ! is_array($config['di'])) {
-            throw new \RuntimeException('Key "di" is missing from the definition config, or is not an array.');
+            throw new RuntimeException('Key "di" is missing from the definition config, or is not an array.');
         }
 
         $definitions = $config['di'];
@@ -412,7 +413,20 @@ class Container implements ContainerInterface, \ArrayAccess
             $name = $parameter->name;
             $class = $parameter->getClass();
 
-            return isset($parameters[$name])? $parameters[$name]: $this->get($class->name);
+            if (isset($parameters[$name])) {
+                return $parameters[$name];
+            }
+
+            if ($class) {
+                return $this->get($class->name);
+            }
+
+            if ($parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+
+            $message = sprintf('Key "%s" is missing from the parameters array, has no default value and is not Type Hinted.', $name);
+            throw new RuntimeException($message);
         }, $reflector->getParameters());
     }
 
