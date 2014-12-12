@@ -64,6 +64,15 @@ interface ContainerInterface
     public function isSingleton($alias);
 
     /**
+     * Call a function defined by the callable and inject the necessary dependencies.
+     *
+     * @param  callable $callable
+     * @param  array    $parameters
+     * @return mixed
+     */
+    public function call(callable $callable, array $parameters = []);
+
+    /**
      * Enable caching
      *
      * @return \Orno\Di\ContainerInterface

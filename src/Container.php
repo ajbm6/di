@@ -12,6 +12,10 @@ use Orno\Di\Definition\ClassDefinition;
 use Orno\Di\Definition\ClosureDefinition;
 use Orno\Di\Definition\DefinitionInterface;
 use Orno\Di\Definition\Factory;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
+use ReflectionParameter;
 
 class Container implements ContainerInterface, \ArrayAccess
 {
@@ -211,6 +215,18 @@ class Container implements ContainerInterface, \ArrayAccess
     /**
      * {@inheritdoc}
      */
+    public function call(callable $callable, array $parameters = [])
+    {
+        $reflector = $this->reflectCallable($callable);
+
+        $dependencies = $this->resolveConcreteFunctionDependencies($reflector, $parameters);
+
+        return call_user_func_array($callable, $dependencies);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function enableCaching()
     {
         $this->caching = true;
@@ -368,6 +384,36 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         return $definition;
+    }
+
+    /**
+     * Get a reflection object for this callable.
+     *
+     * @param callable $callable
+     * @return ReflectionFunctionAbstract
+     */
+    protected function reflectCallable(callable $callable)
+    {
+        if (is_array($callable)) {
+            return new ReflectionMethod($callable[0], $callable[1]);
+        } else {
+            return new ReflectionFunction($callable);
+        }
+    }
+
+    /**
+     * @param ReflectionFunctionAbstract $reflector
+     * @param array $parameters
+     * @return array
+     */
+    protected function resolveConcreteFunctionDependencies(ReflectionFunctionAbstract $reflector, $parameters)
+    {
+        return array_map(function (ReflectionParameter $parameter) use ($parameters) {
+            $name = $parameter->name;
+            $class = $parameter->getClass();
+
+            return isset($parameters[$name])? $parameters[$name]: $this->get($class->name);
+        }, $reflector->getParameters());
     }
 
     /**
