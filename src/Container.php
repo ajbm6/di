@@ -57,7 +57,7 @@ class Container implements ContainerInterface, \ArrayAccess
         $config          = [],
         Factory $factory = null
     ) {
-        $this->factory = (is_null($factory)) ? new Factory : $factory;
+        $this->factory = (is_null($factory)) ? new Factory() : $factory;
         $this->cache   = $cache;
 
         $this->addItemsFromConfig($config);
@@ -145,7 +145,7 @@ class Container implements ContainerInterface, \ArrayAccess
         $definition = $this->reflect($alias);
 
         if ($this->isCaching()) {
-            $this->cache->set('orno::container::' . $alias, serialize($definition));
+            $this->cache->set('orno::container::'.$alias, serialize($definition));
         }
 
         $this->items[$alias]['definition'] = $definition;
@@ -185,9 +185,10 @@ class Container implements ContainerInterface, \ArrayAccess
      */
     protected function getCachedDefinition($alias)
     {
-        if ($cached = $this->cache->get('orno::container::' . $alias)) {
+        if ($cached = $this->cache->get('orno::container::'.$alias)) {
             $definition = unserialize($cached);
 
+            /** @var callable $definition */
             return $definition();
         }
 
@@ -390,7 +391,7 @@ class Container implements ContainerInterface, \ArrayAccess
     /**
      * Get a reflection object for this callable.
      *
-     * @param callable $callable
+     * @param  callable $callable
      * @return ReflectionFunctionAbstract
      */
     protected function reflectCallable(callable $callable)
@@ -407,8 +408,8 @@ class Container implements ContainerInterface, \ArrayAccess
     }
 
     /**
-     * @param ReflectionFunctionAbstract $reflector
-     * @param array $parameters
+     * @param  ReflectionFunctionAbstract $reflector
+     * @param  array $parameters
      * @return array
      */
     protected function resolveConcreteFunctionDependencies(ReflectionFunctionAbstract $reflector, $parameters)
