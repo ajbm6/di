@@ -338,9 +338,9 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         // define in the container, with constructor arguments and method calls
-        $definition = $this->add($alias, $concrete, $singleton)
+        $definition = $this->add($alias, $concrete, $singleton);
 
-        $definition->withArguments($arguments)
+        $definition->withArguments($arguments);
 
         if ($definition instanceof ClassDefinition) {
             $definition->withMethodCalls($methods);
