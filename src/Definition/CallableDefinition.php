@@ -38,6 +38,6 @@ class CallableDefinition extends AbstractDefinition implements DefinitionInterfa
     {
         $resolved = $this->resolveArguments($args);
 
-        return call_user_func_array($this->callable, $args);
+        return call_user_func_array($this->callable, $resolved);
     }
 }
