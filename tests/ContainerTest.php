@@ -431,7 +431,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $expected = 'OrnoTest\Assets\Baz';
 
-        $c = new Container();
+        $c = new Container;
         $returned = $c->call(function (Baz $baz) use ($expected) {
             return get_class($baz);
         });
@@ -443,7 +443,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $expected = 'bar+OrnoTest\Assets\Baz';
 
-        $c = new Container();
+        $c = new Container;
         $returned = $c->call(function ($foo, Baz $baz) use ($expected) {
             return $foo.'+'.get_class($baz);
         }, ['foo' => 'bar']);
@@ -455,7 +455,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $expected = 'bar';
 
-        $c = new Container();
+        $c = new Container;
         $returned = $c->call(function ($foo = 'bar') {
             return $foo;
         });
@@ -468,7 +468,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testCallThrowsRuntimeExceptionIfParameterResolutionFails()
     {
-        $c = new Container();
+        $c = new Container;
         $c->call(function (array $foo) {
             return implode(',', $foo);
         });
@@ -485,5 +485,32 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInternalType('array', $returned);
         $this->assertEmpty($returned);
+    }
+
+    public function testContainerResolvesRegisteredCallable()
+    {
+        $c = new Container;
+
+        $c->add('OrnoTest\Assets\BazInterface', 'OrnoTest\Assets\Baz');
+
+        $c->invokable('function', function (\OrnoTest\Assets\Foo $foo) {
+            return $foo;
+        })->withArgument('OrnoTest\Assets\Foo');
+
+        $foo = $c->call('function');
+
+        $this->assertInstanceOf('OrnoTest\Assets\Foo', $foo);
+        $this->assertInstanceOf('OrnoTest\Assets\Bar', $foo->bar);
+        $this->assertInstanceOf('OrnoTest\Assets\Baz', $foo->bar->baz);
+        $this->assertInstanceOf('OrnoTest\Assets\BazInterface', $foo->bar->baz);
+    }
+
+    public function testCallThrowsExceptionWhenCannotResolveCallable()
+    {
+        $this->setExpectedException('RuntimeException');
+
+        $c = new Container;
+
+        $c->call('hello');
     }
 }

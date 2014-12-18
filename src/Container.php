@@ -107,7 +107,7 @@ class Container implements ContainerInterface, \ArrayAccess
     public function invokable($alias, callable $concrete)
     {
         $factory = $this->getDefinitionFactory();
-        $definition = $factory($alias, $concrete, $this);
+        $definition = $factory($alias, $concrete, $this, true);
 
         $this->callables[$alias] = $definition;
 
@@ -186,7 +186,7 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         throw new \RuntimeException(
-            sprintf('Unable to call callable [%s], does it exist and is it registered with the container?')
+            sprintf('Unable to call callable [%s], does it exist and is it registered with the container?', $alias)
         );
     }
 
@@ -332,9 +332,9 @@ class Container implements ContainerInterface, \ArrayAccess
         $methods   = [];
 
         if (is_array($options)) {
-            $singleton  = (! empty($options['singleton']));
-            $arguments  = (array_key_exists('arguments', $options)) ? (array) $options['arguments'] : [];
-            $methods    = (array_key_exists('methods', $options)) ? (array) $options['methods'] : [];
+            $singleton = (! empty($options['singleton']));
+            $arguments = (array_key_exists('arguments', $options)) ? (array) $options['arguments'] : [];
+            $methods   = (array_key_exists('methods', $options)) ? (array) $options['methods'] : [];
         }
 
         // define in the container, with constructor arguments and method calls

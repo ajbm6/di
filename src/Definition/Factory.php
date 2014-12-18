@@ -17,10 +17,15 @@ class Factory
      * @param  string                       $alias
      * @param  mixed                        $concrete
      * @param  \Orno\Di\ContainerInterface  $container
+     * @param  boolean                      $callable
      * @return mixed
      */
-    public function __invoke($alias, $concrete, ContainerInterface $container)
+    public function __invoke($alias, $concrete, ContainerInterface $container, $callable = false)
     {
+        if ($callable === true) {
+            return new CallableDefinition($alias, $concrete, $container);
+        }
+
         if ($concrete instanceof \Closure) {
             return new ClosureDefinition($alias, $concrete, $container);
         }
