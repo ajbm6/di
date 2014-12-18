@@ -337,10 +337,14 @@ class Container implements ContainerInterface, \ArrayAccess
             $methods    = (array_key_exists('methods', $options)) ? (array) $options['methods'] : [];
         }
 
-        // Define in the container, with constructor arguments and method calls
-        $this->add($alias, $concrete, $singleton)
-             ->withArguments($arguments)
-             ->withMethodCalls($methods);
+        // define in the container, with constructor arguments and method calls
+        $definition = $this->add($alias, $concrete, $singleton)
+
+        $definition->withArguments($arguments)
+
+        if ($definition instanceof ClassDefinition) {
+            $definition->withMethodCalls($methods);
+        }
     }
 
     /**
