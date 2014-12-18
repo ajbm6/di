@@ -32,21 +32,4 @@ interface DefinitionInterface
      * @return \Orno\Di\Definition\DefinitionInterface
      */
     public function withArguments(array $args);
-
-    /**
-     * Add a method to be invoked
-     *
-     * @param  string $method
-     * @param  array  $args
-     * @return \Orno\Di\Definition\DefinitionInterface
-     */
-    public function withMethodCall($method, array $args = []);
-
-    /**
-     * Add multiple methods to be invoked
-     *
-     * @param  array $methods
-     * @return \Orno\Di\Definition\DefinitionInterface
-     */
-    public function withMethodCalls(array $methods = []);
 }

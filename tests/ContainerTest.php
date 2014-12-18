@@ -162,60 +162,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('OrnoTest\Assets\Baz', $foo->baz);
     }
 
-    public function testSettingMethodCallOnClosureThrowsException()
-    {
-        $this->setExpectedException('Orno\Di\Exception\UnbindableMethodCallException');
-
-        $c = new Container;
-
-        $baz = new \OrnoTest\Assets\Baz;
-        $bar = new \OrnoTest\Assets\Bar($baz);
-
-        $c->add('foo', function ($bar, $baz) {
-            $foo = new \OrnoTest\Assets\Foo($bar);
-
-            $foo->injectBaz($baz);
-
-            return $foo;
-        })->withMethodCall('someMethod', []);
-    }
-
-    public function testSettingMethodCallsOnClosureThrowsException()
-    {
-        $this->setExpectedException('Orno\Di\Exception\UnbindableMethodCallException');
-
-        $c = new Container;
-
-        $baz = new \OrnoTest\Assets\Baz;
-        $bar = new \OrnoTest\Assets\Bar($baz);
-
-        $c->add('foo', function ($bar, $baz) {
-            $foo = new \OrnoTest\Assets\Foo($bar);
-
-            $foo->injectBaz($baz);
-
-            return $foo;
-        })->withMethodCalls([ 'aMethod', 'anotherMethod' ]);
-    }
-
-    public function testSettingMethodCallsOnClosureFailsSilentlyWithEmptyArray()
-    {
-        $c = new Container;
-
-        $baz = new \OrnoTest\Assets\Baz;
-        $bar = new \OrnoTest\Assets\Bar($baz);
-
-        $this->assertNull(
-            $c->add('foo', function ($bar, $baz) {
-                $foo = new \OrnoTest\Assets\Foo($bar);
-
-                $foo->injectBaz($baz);
-
-                return $foo;
-            })->withMethodCalls([])
-        );
-    }
-
     public function testStoresAndReturnsArbitraryValues()
     {
         $baz1 = new \OrnoTest\Assets\Baz;
@@ -463,7 +409,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $expected = 'bar';
 
-        $c = new Container();
+        $c = new Container;
         $returned = $c->call(function ($foo) {
             return $foo;
         }, ['foo' => $expected]);

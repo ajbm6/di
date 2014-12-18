@@ -12,11 +12,6 @@ use Orno\Di\Definition\ClassDefinition;
 use Orno\Di\Definition\ClosureDefinition;
 use Orno\Di\Definition\DefinitionInterface;
 use Orno\Di\Definition\Factory;
-use ReflectionFunction;
-use ReflectionFunctionAbstract;
-use ReflectionMethod;
-use ReflectionParameter;
-use RuntimeException;
 
 class Container implements ContainerInterface, \ArrayAccess
 {
@@ -39,6 +34,11 @@ class Container implements ContainerInterface, \ArrayAccess
      * @var array
      */
     protected $singletons = [];
+
+    /**
+     * @var array
+     */
+    protected $callables = [];
 
     /**
      * @var boolean
@@ -85,8 +85,9 @@ class Container implements ContainerInterface, \ArrayAccess
         // get a definition of the item
         $this->items[$alias]['singleton'] = (boolean) $singleton;
 
-        $factory = $this->getDefinitionFactory();
+        $factory    = $this->getDefinitionFactory();
         $definition = $factory($alias, $concrete, $this);
+
         $this->items[$alias]['definition'] = $definition;
 
         return $definition;
@@ -98,6 +99,19 @@ class Container implements ContainerInterface, \ArrayAccess
     public function singleton($alias, $concrete = null)
     {
         return $this->add($alias, $concrete, true);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function invokable($alias, callable $concrete)
+    {
+        $factory = $this->getDefinitionFactory();
+        $definition = $factory($alias, $concrete, $this);
+
+        $this->callables[$alias] = $definition;
+
+        return $definition;
     }
 
     /**
@@ -145,12 +159,35 @@ class Container implements ContainerInterface, \ArrayAccess
         $definition = $this->reflect($alias);
 
         if ($this->isCaching()) {
-            $this->cache->set('orno::container::'.$alias, serialize($definition));
+            $this->cache->set('orno::container::' . $alias, serialize($definition));
         }
 
         $this->items[$alias]['definition'] = $definition;
 
         return $definition();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function call($alias, array $args = [])
+    {
+        if (is_callable($alias)) {
+            $callable = $this->reflectCallable($alias);
+            $args     = $this->resolveCallableArguments($callable, $args);
+
+            return call_user_func_array($alias, $args);
+        }
+
+        if (array_key_exists($alias, $this->callables)) {
+            $definition = $this->callables[$alias];
+
+            return $definition($args);
+        }
+
+        throw new \RuntimeException(
+            sprintf('Unable to call callable [%s], does it exist and is it registered with the container?')
+        );
     }
 
     /**
@@ -185,10 +222,9 @@ class Container implements ContainerInterface, \ArrayAccess
      */
     protected function getCachedDefinition($alias)
     {
-        if ($cached = $this->cache->get('orno::container::'.$alias)) {
+        if ($cached = $this->cache->get('orno::container::' . $alias)) {
             $definition = unserialize($cached);
 
-            /** @var callable $definition */
             return $definition();
         }
 
@@ -212,18 +248,6 @@ class Container implements ContainerInterface, \ArrayAccess
             array_key_exists($alias, $this->singletons) ||
             (array_key_exists($alias, $this->items) && $this->items[$alias]['singleton'] === true)
         );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function call(callable $callable, array $parameters = [])
-    {
-        $reflector = $this->reflectCallable($callable);
-
-        $dependencies = $this->resolveConcreteFunctionDependencies($reflector, $parameters);
-
-        return call_user_func_array($callable, $dependencies);
     }
 
     /**
@@ -273,7 +297,9 @@ class Container implements ContainerInterface, \ArrayAccess
     protected function addItemsFromConfig($config)
     {
         if (! is_array($config) && ! $config instanceof \ArrayAccess) {
-            throw new \InvalidArgumentException('You can only load definitions from an array or an object that implements ArrayAccess.');
+            throw new \InvalidArgumentException(
+                'You can only load definitions from an array or an object that implements ArrayAccess.'
+            );
         }
 
         if (empty($config)) {
@@ -281,7 +307,9 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         if (! isset($config['di']) || ! is_array($config['di'])) {
-            throw new RuntimeException('Key "di" is missing from the definition config, or is not an array.');
+            throw new \RuntimeException(
+                'Could not process configuration, either the top level key [di] is missing or the configuration is not an array.'
+            );
         }
 
         $definitions = $config['di'];
@@ -401,25 +429,27 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         if (is_array($callable)) {
-            return new ReflectionMethod($callable[0], $callable[1]);
+            return new \ReflectionMethod($callable[0], $callable[1]);
         } else {
-            return new ReflectionFunction($callable);
+            return new \ReflectionFunction($callable);
         }
     }
 
     /**
-     * @param  ReflectionFunctionAbstract $reflector
-     * @param  array $parameters
+     * Resolves arguments for a callable
+     *
+     * @param  \ReflectionFunctionAbstract $reflector
+     * @param  array $args
      * @return array
      */
-    protected function resolveConcreteFunctionDependencies(ReflectionFunctionAbstract $reflector, $parameters)
+    protected function resolveCallableArguments(\ReflectionFunctionAbstract $reflector, $args = [])
     {
-        return array_map(function (ReflectionParameter $parameter) use ($parameters) {
-            $name = $parameter->name;
+        return array_map(function (\ReflectionParameter $parameter) use ($args) {
+            $name  = $parameter->name;
             $class = $parameter->getClass();
 
-            if (isset($parameters[$name])) {
-                return $parameters[$name];
+            if (isset($args[$name])) {
+                return $args[$name];
             }
 
             if ($class) {
@@ -430,8 +460,13 @@ class Container implements ContainerInterface, \ArrayAccess
                 return $parameter->getDefaultValue();
             }
 
-            $message = sprintf('Key "%s" is missing from the parameters array, has no default value and is not Type Hinted.', $name);
-            throw new RuntimeException($message);
+            throw new \RuntimeException(
+                sprintf(
+                    'Cannot resolve argument [%s], it should be provided within an array of arguments passed to ' .
+                    '[%s::call], have a default value or be type hinted',
+                    $name, get_class($this)
+                )
+            );
         }, $reflector->getParameters());
     }
 

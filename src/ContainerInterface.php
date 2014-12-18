@@ -29,6 +29,15 @@ interface ContainerInterface
     public function singleton($alias, $concrete = null);
 
     /**
+     * Add a callable definition to the container
+     *
+     * @param  string   $alias
+     * @param  callable $concrete
+     * @return \Orno\Di\Definition\DefinitionInterface
+     */
+    public function invokable($alias, callable $concrete);
+
+    /**
      * Modify the definition of an already defined service
      *
      * @param   string $alias
@@ -48,6 +57,15 @@ interface ContainerInterface
     public function get($alias, array $args = []);
 
     /**
+     * Invoke
+     *
+     * @param  string $alias
+     * @param  array  $args
+     * @return mixed
+     */
+    public function call($alias, array $args = []);
+
+    /**
      * Check if an item is registered with the container
      *
      * @param  string  $alias
@@ -62,15 +80,6 @@ interface ContainerInterface
      * @return boolean
      */
     public function isSingleton($alias);
-
-    /**
-     * Call a function defined by the callable and inject the necessary dependencies.
-     *
-     * @param  callable $callable
-     * @param  array    $parameters
-     * @return mixed
-     */
-    public function call(callable $callable, array $parameters = []);
 
     /**
      * Enable caching

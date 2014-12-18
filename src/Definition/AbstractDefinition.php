@@ -9,7 +9,7 @@ namespace Orno\Di\Definition;
 
 use Orno\Di\ContainerInterface;
 
-abstract class AbstractDefinition implements DefinitionInterface
+abstract class AbstractDefinition
 {
     /**
      * @var \Orno\Di\ContainerInterface
@@ -60,31 +60,6 @@ abstract class AbstractDefinition implements DefinitionInterface
     {
         foreach ($args as $arg) {
             $this->withArgument($arg);
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withMethodCall($method, array $args = [])
-    {
-        $this->methods[] = [
-            'method'    => $method,
-            'arguments' => $args
-        ];
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withMethodCalls(array $methods = [])
-    {
-        foreach ($methods as $method => $args) {
-            $this->withMethodCall($method, $args);
         }
 
         return $this;

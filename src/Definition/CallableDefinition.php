@@ -8,27 +8,27 @@
 namespace Orno\Di\Definition;
 
 use Orno\Di\ContainerInterface;
-use Orno\Di\Exception;
 
-class ClosureDefinition extends AbstractDefinition implements DefinitionInterface
+class CallableDefinition extends AbstractDefinition implements DefinitionInterface
 {
+
     /**
-     * @var \Closure
+     * @var callable
      */
-    protected $closure;
+    protected $callable;
 
     /**
      * Constructor
      *
      * @param string                      $alias
-     * @param \Closure                    $closure
+     * @param callable                    $concrete
      * @param \Orno\Di\ContainerInterface $container
      */
-    public function __construct($alias, \Closure $closure, ContainerInterface $container)
+    public function __construct($alias, callable $concrete, ContainerInterface $container)
     {
         parent::__construct($alias, $container);
 
-        $this->closure = $closure;
+        $this->callable = $concrete;
     }
 
     /**
@@ -36,6 +36,8 @@ class ClosureDefinition extends AbstractDefinition implements DefinitionInterfac
      */
     public function __invoke(array $args = [])
     {
-        return call_user_func_array($this->closure, $this->resolveArguments($args));
+        $resolved = $this->resolveArguments($args);
+
+        return call_user_func_array($this->callable, $args);
     }
 }
