@@ -11,23 +11,15 @@ Orno\Di is a small but powerful dependency injection container that allows you t
 
 ## Installation
 
-Add `orno/di` to your `composer.json`.
+The recommended installation method is via Composer.
 
-```json
-{
-    "require": {
-        "orno/di": "2.*"
-    }
-}
+In your project root just run:
+
+```shell
+$ composer require orno/di
 ```
 
-Allow Composer to autoload the container.
-
-```php
-<?php
-
-include 'vendor/autoload.php';
-```
+Ensure that you’ve set up your project to [autoload Composer-installed packages](https://getcomposer.org/doc/00-intro.md#autoloading).
 
 ## Usage
 
@@ -35,13 +27,13 @@ include 'vendor/autoload.php';
 - [Setter Injection](#setter-injection)
 - [Factory Closures](#factory-closures)
 - [Automatic Dependency Resolution](#automatic-dependency-resolution)
+- [Registering Callables](#registering-callablesinvokables)
 - [Caching](#caching)
 - [Configuration](#configuration)
 
 ### Constructor Injection
 
 The container can be used to register objects and inject constructor arguments such as dependencies or config items.
-
 
 For example, if we have a `Session` object that depends on an implementation of a `StorageInterface` and also requires a session key string. We could do the following:
 
@@ -209,6 +201,22 @@ With nested dependencies, this can become quite cumbersome and hard to keep trac
 $container = new \Orno\Di\Container;
 
 $foo = $container->get('Foo');
+```
+
+### Registering Callables/Invokables
+
+Since version 2.3.0 the container now allows you to register callables/invokables and call them either with runtime arguments, defaults stored within the container, or if no arguments are stored, the container will attempt to resolve any arguments automatically with type hints or default values.
+
+```php
+$container = new \Orno\Di\Container;
+
+$container->add('Some\Class');
+
+$container->invokable('some_helper_function', function (Some\Class $class) {
+    // ...
+})->withArgument('Some\Class');
+
+$container->call('some_helper_function');
 ```
 
 ### Caching
