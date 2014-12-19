@@ -212,11 +212,22 @@ $container = new \Orno\Di\Container;
 
 $container->add('Some\Class');
 
-$container->invokable('some_helper_function', function (Some\Class $class) {
+$container->invokable('some_helper_function', function (Some\Class $object) {
     // ...
 })->withArgument('Some\Class');
 
 $container->call('some_helper_function');
+```
+
+To let the container do the auto-resolving magic, you can use the `call` method without `invokable`.
+
+```php
+$container->call(function (Some\Class $object) {
+    // ...
+});
+
+$container->call(function (Some\Class $object, $foo, $baz = 'default') {
+}, ['foo' => 'foo_value']);
 ```
 
 ### Caching
