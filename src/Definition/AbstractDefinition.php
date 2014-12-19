@@ -79,7 +79,10 @@ abstract class AbstractDefinition
         $resolvedArguments = [];
 
         foreach ($args as $arg) {
-            if (is_string($arg) && ($this->container->isRegistered($arg) || class_exists($arg))) {
+            if (
+                is_string($arg) &&
+                ($this->container->isRegistered($arg) || $this->container->isSingleton($arg) || class_exists($arg)))
+            {
                 $resolvedArguments[] = $this->container->get($arg);
                 continue;
             }
