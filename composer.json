@@ -1,0 +1,42 @@
+{
+    "name": "league/dic",
+    "description": "A fast and intuitive dependency injection container.",
+    "keywords": [
+        "league",
+        "dic"
+    ],
+    "homepage": "https://github.com/thephpleague/route",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Phil Bennett",
+            "email": "philipobenito@gmail.com",
+            "homepage": "http://philipobenito.github.io",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php" : ">=5.4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit" : "4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "League\\Dic\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "files": [
+            "tests/Asset/functions.php"
+        ],
+        "psr-4": {
+            "League\\Dic\\Test\\": "tests"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
