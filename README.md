@@ -258,7 +258,7 @@ In the above example, `Foo` will be reflected on by the container as there is no
 
 ### Configuration
 
-As your project grows, so will your dependency map. At this point it may be worth abstracting your mappins in to a config file. You can store your mappings in an array, or any object implementing the `ArrayAccess` interface.  We recommend using [Orno\Config](https://github.com/orno/config), which allows you to store your mappings in either PHP arrays, XML or YAML.
+As your project grows, so will your dependency map. At this point it may be worth abstracting your mappings into a config file. You can store your mappings in an array, or any object implementing the `ArrayAccess` interface.  We recommend using [Orno\Config](https://github.com/orno/config), which allows you to store your mappings in either PHP arrays, XML or YAML.
 
 **Note:** When using an array, or other ArrayAccess object, the mappings **must** be under a key named `di`.
 
